@@ -1,0 +1,24 @@
+--cpu Cortex-M3
+"robot1\startup_stm32f103xb.o"
+"robot1\main.o"
+"robot1\stm32f1xx_it.o"
+"robot1\stm32f1xx_hal_msp.o"
+"robot1\stm32f1xx_hal_gpio_ex.o"
+"robot1\stm32f1xx_hal_tim.o"
+"robot1\stm32f1xx_hal_tim_ex.o"
+"robot1\stm32f1xx_hal.o"
+"robot1\stm32f1xx_hal_rcc.o"
+"robot1\stm32f1xx_hal_rcc_ex.o"
+"robot1\stm32f1xx_hal_gpio.o"
+"robot1\stm32f1xx_hal_dma.o"
+"robot1\stm32f1xx_hal_cortex.o"
+"robot1\stm32f1xx_hal_pwr.o"
+"robot1\stm32f1xx_hal_flash.o"
+"robot1\stm32f1xx_hal_flash_ex.o"
+"robot1\stm32f1xx_hal_exti.o"
+"robot1\stm32f1xx_hal_uart.o"
+"robot1\system_stm32f1xx.o"
+--strict --scatter "Robot1\Robot1.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "Robot1.map" -o Robot1\Robot1.axf
