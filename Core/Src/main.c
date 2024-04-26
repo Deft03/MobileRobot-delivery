@@ -39,8 +39,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RxSIZE  6                 // Size of data received from I2C
-#define MUL_number 1000           // coef using for convert data I2C
 #define Pi 3.1415926535897932384626433832795
 #define error -0.0088              //error when rotate (motor) [NEEDED EDITING]
 #define Kp 26.5258238789594       //[PID Parameter](100/3.76991118);//kp=in/out=100/36
