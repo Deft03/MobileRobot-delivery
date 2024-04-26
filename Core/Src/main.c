@@ -41,8 +41,10 @@
 /* USER CODE BEGIN PD */
 #define Pi 3.1415926535897932384626433832795
 #define error -0.0088              //error when rotate (motor) [NEEDED EDITING]
-#define Kp 26.5258238789594       //[PID Parameter](100/3.76991118);//kp=in/out=100/36
-#define Ki 0.005                  //PID Parameter
+#define Kp_R 26.5258238789594       //[PID Parameter](100/3.76991118);//kp=in/out=100/36
+#define Ki_R 0.005                  //PID Parameter
+#define Kp_L 26.5258238789594       //[PID Parameter](100/3.76991118);//kp=in/out=100/36
+#define Ki_L 0.005                  //PID Parameter
 #define PULSES 10752              //Read ENCODER X4
 #define SAMPLETIME  0.005         //Interrupt TIMER 4 5ms
 /* USER CODE END PD */
@@ -60,28 +62,58 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 //
+/* ------------------MOTOR RIGHT ---------------------------------------------------------*/
+
 /*========== ENCODER INTERRUPT EXTI 4 =====================*/
-uint8_t PreviousState;            // Save State Interrupt
-int16_t CountValue;               // Counter Pulses from Encoder
-uint16_t CntVel;                  // VEL Counter
+uint8_t PreviousState_R;            // Save State Interrupt
+int16_t CountValue_R;               // Counter Pulses from Encoder
+uint16_t CntVel_R;                  // VEL Counter
 float PulseToRad = PULSES / (2*Pi);
 
 /*========== INTERRUPT TIMER 4 CALCULATE VEL VARIABLES ============*/
-uint8_t PWM;
-float CurrentSpeed;               // Current Speed (rad/s)
-float DesiredSpeed;               // Desired Speed (rad/s)
-float RealSpeed;                  // Current Speed (RPM)
-int16_t Cnttmp;
+float CurrentSpeed_R;               // Current Speed (rad/s)
+float DesiredSpeed_R;               // Desired Speed (rad/s)
+float RealSpeed_R;                  // Current Speed (RPM)
+int16_t Cnttmp_R;
 
 /*=========== PID VARIABLES ===============================================*/
-uint8_t HILIM;                    // Limit PWM HIGH
-uint8_t LOLIM;                    // Limit PWM LOW     
-uint8_t PWM;                      // Pulse PWM 0 -> 100 PWM
-float uout;                       // [PID] Value return
-float err;                        // [PID] error
+uint8_t HILIM_R;                    // Limit PWM HIGH
+uint8_t LOLIM_R;                    // Limit PWM LOW     
+uint8_t PWM_R;                      // Pulse PWM 0 -> 100 PWM
+float uout_R;                       // [PID] Value return
+float err_R;                        // [PID] error
 
 /*========== TRANSFER DATA USING UART ============*/
 char buffer[32]={0};
+
+/* -------------------------------------------------------------------------------------------------*/
+
+/* ------------------MOTOR LEFT ---------------------------------------------------------*/
+
+/*========== ENCODER INTERRUPT EXTI 4 =====================*/
+uint8_t PreviousState_L;            // Save State Interrupt
+int16_t CountValue_L;               // Counter Pulses from Encoder
+uint16_t CntVel_L;                  // VEL Counter
+float PulseToRad_L = PULSES / (2*Pi);
+
+/*========== INTERRUPT TIMER 4 CALCULATE VEL VARIABLES ============*/
+float CurrentSpeed_L;               // Current Speed (rad/s)
+float DesiredSpeed_L;               // Desired Speed (rad/s)
+float RealSpeed_L;                  // Current Speed (RPM)
+int16_t Cnttmp_L;
+
+/*=========== PID VARIABLES ===============================================*/
+uint8_t HILIM_L;                    // Limit PWM HIGH
+uint8_t LOLIM_L;                    // Limit PWM LOW     
+uint8_t PWM_L;                      // Pulse PWM 0 -> 100 PWM
+float uout_L;                       // [PID] Value return
+float err_L;                        // [PID] error
+
+/*========== TRANSFER DATA USING UART ============*/
+char buffer[32]={0};
+
+/* -------------------------------------------------------------------------------------------------*/
+
 
 
 /* USER CODE END PV */
@@ -117,6 +149,8 @@ void uprintf(char *str){
   HAL_UART_Transmit(&huart1,(uint8_t *)str,sizeof(str), 100);
 
 }
+//============= Encoder for motor RIGHT==========
+
 void EXTI9_5_IRQHandler(void){	// doc encoder	
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 unsigned char State0;
@@ -125,34 +159,35 @@ unsigned char State0;
 	State0 = State0&0x03;
 	switch (State0) {
 		case 0:
-			if(PreviousState==1) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==1) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 1:
-			if(PreviousState==3) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==3) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 2:
-			if(PreviousState==0) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==0) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 3:
-			if(PreviousState==2) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==2) CountValue_R++;
+			else CountValue_R--;
 		break;
 		}
-	PreviousState = State0;
-	CntVel++;
-	if (CountValue>=PULSES) {
-		CountValue = 0;
+	PreviousState_R = State0;
+	CntVel_R++;
+	if (CountValue_R>=PULSES) {
+		CountValue_R = 0;
 	}
-	else if	(CountValue<=-PULSES) {
-		CountValue = 0;
+	else if	(CountValue_R<=-PULSES) {
+		CountValue_R = 0;
 	}
   /* USER CODE END EXTI4_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   /* USER CODE BEGIN EXTI4_IRQn 1 */
 }
+
 void EXTI4_IRQHandler(void){	// doc encoder	
   /* USER CODE BEGIN EXTI4_IRQn 0 */
 unsigned char State1;
@@ -161,29 +196,108 @@ unsigned char State1;
 	State1 = State1&0x03;
 	switch (State1) {
 		case 0:
-			if(PreviousState==1) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==1) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 1:
-			if(PreviousState==3) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==3) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 2:
-			if(PreviousState==0) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==0) CountValue_R++;
+			else CountValue_R--;
 		break;
 		case 3:
-			if(PreviousState==2) CountValue++;
-			else CountValue--;
+			if(PreviousState_R==2) CountValue_R++;
+			else CountValue_R--;
 		break;
 		}
-	PreviousState = State1;
-	CntVel++;
-	if (CountValue>=PULSES) {
-		CountValue = 0;
+	PreviousState_R = State1;
+	CntVel_R++;
+	if (CountValue_R>=PULSES) {
+		CountValue_R = 0;
 	}
-	else if	(CountValue<=-PULSES) {
-		CountValue = 0;
+	else if	(CountValue_R<=-PULSES) {
+		CountValue_R = 0;
+	}
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
+////////////////////////////////
+
+//============= Encoder for motor LEFT==========
+
+void EXTI9_5_IRQHandler(void){	// doc encoder	
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+unsigned char State0;
+	State0 = (State0<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+	State0 = (State0<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6);
+	State0 = State0&0x03;
+	switch (State0) {
+		case 0:
+			if(PreviousState_L) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 1:
+			if(PreviousState_L==3) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 2:
+			if(PreviousState_L==0) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 3:
+			if(PreviousState_L==2) CountValue_L++;
+			else CountValue_L--;
+		break;
+		}
+	PreviousState_L = State0;
+	CntVel_L++;
+	if (CountValue_L>=PULSES) {
+		CountValue_L = 0;
+	}
+	else if	(CountValue_L<=-PULSES) {
+		CountValue_L = 0;
+	}
+  /* USER CODE END EXTI4_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
+  /* USER CODE BEGIN EXTI4_IRQn 1 */
+}
+
+void EXTI4_IRQHandler(void){	// doc encoder	
+  /* USER CODE BEGIN EXTI4_IRQn 0 */
+unsigned char State1;
+	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6);
+	State1 = State1&0x03;
+	switch (State1) {
+		case 0:
+			if(PreviousState_L==1) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 1:
+			if(PreviousState_L==3) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 2:
+			if(PreviousState_L==0) CountValue_L++;
+			else CountValue_L--;
+		break;
+		case 3:
+			if(PreviousState_L==2) CountValue_L++;
+			else CountValue_L--;
+		break;
+		}
+	PreviousState_L = State1;
+	CntVel_L++;
+	if (CountValue_L>=PULSES) {
+		CountValue_L = 0;
+	}
+	else if	(CountValue_L<=-PULSES) {
+		CountValue_L = 0;
 	}
   /* USER CODE END EXTI3_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
@@ -192,41 +306,74 @@ unsigned char State1;
   /* USER CODE END EXTI3_IRQn 1 */
 }
 
-//============= TIM4 ==========
+///////////////////
+
+//============= TIM4 for MOTOR 1 ==========
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {	// ngat timer
 	if(htim->Instance==TIM4){	                                  //ngat timer 4	5ms tinh toc do
-    Cnttmp = CntVel;
-		CntVel = 0;
-    RealSpeed = (Cnttmp*60000)/(5*12*4*19.2);		//RPM; 
-		CurrentSpeed = (RealSpeed*2*Pi)/60;  //rad/s
+    ///////////RIGHT
+    Cnttmp_R = CntVel_R;
+		CntVel_R = 0;
+    RealSpeed_R = (Cnttmp_R*60000)/(5*12*4*19.2);		//RPM; 
+		CurrentSpeed_R = (RealSpeed_R*2*Pi)/60;  //rad/s
 		//PidFunction(DesiredSpeed,RealVel);
-	  PWM = PidFunction(15,CurrentSpeed);  //rad/s    // Run DC motor with velocity = 15 rad/s
-    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_1,PWM); 
+	  PWM_R = PidFunction_R(15,CurrentSpeed_R);  //rad/s    // Run DC motor with velocity = 15 rad/s
+    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_1,PWM_R); 
+    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_2,0); 
+
+    ////////////LEFT
+    Cnttmp_L = CntVel_L;
+		CntVel_L = 0;
+    RealSpeed_L = (Cnttmp_L*60000)/(5*12*4*19.2);		//RPM; 
+		CurrentSpeed_L = (RealSpeed_L*2*Pi)/60;  //rad/s
+		//PidFunction(DesiredSpeed,RealVel);
+	  PWM_L = PidFunction_L(15,CurrentSpeed_L);  //rad/s    // Run DC motor with velocity = 15 rad/s
+    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_3,PWM_L); 
+    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_4,0); 
 
 	}
 }
 
-//=============PID FUNCTION==========
-int PidFunction(float desireVel, float currentVel){
-	HILIM = 99, LOLIM = 15;
+//=============PID FUNCTION for MOTOR R==========
+int PidFunction_R(float desireVel, float currentVel){
+	HILIM_R = 99, LOLIM_R = 15;
 	static float Ui = 0;
 	float up,ui;
 
-	err = desireVel-currentVel;    //ERRORs
-	up = Kp*err;
-	ui = Ui+Ki*err*SAMPLETIME;
+	err_R = desireVel-currentVel;    //ERRORs
+	up = Kp_R*err_R;
+	ui = Ui+Ki_R*err_R*SAMPLETIME;
 	Ui = ui;
-	uout = (int)(up+ui);
-	uout = PWM+uout;
+	uout_R = (int)(up+ui);
+	uout_R = PWM_R+uout_R;
 	
-	if (uout > HILIM) uout = HILIM;
-	else if( uout < LOLIM) uout = LOLIM;
-	if (desireVel <= 0) uout = 0;
-	PWM = uout;
+	if (uout_R > HILIM_R) uout_R = HILIM_R;
+	else if( uout_R < LOLIM_R) uout_R = LOLIM_R;
+	if (desireVel <= 0) uout_R = 0;
+	PWM_R = uout_R;
 
-	return PWM;
+	return PWM_R;
 }
+//=============PID FUNCTION for MOTOR L==========
+int PidFunction_L(float desireVel, float currentVel){
+	HILIM_L = 99, LOLIM_L = 15;
+	static float Ui = 0;
+	float up,ui;
 
+	err_L = desireVel-currentVel;    //ERRORs
+	up = Kp_L*err_L;
+	ui = Ui+Ki_L*err_L*SAMPLETIME;
+	Ui = ui;
+	uout_L = (int)(up+ui);
+	uout_L = PWM_L+uout_L;
+	
+	if (uout_L > HILIM_L) uout_L = HILIM_L;
+	else if( uout_L < LOLIM_L) uout_L = LOLIM_L;
+	if (desireVel <= 0) uout_L = 0;
+	PWM_L = uout_L;
+
+	return PWM_L;
+}
 //=============UART callback function==========
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
@@ -285,7 +432,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_SET);
 
-		sprintf(buffer,"Velocity: %f", CurVel);
+		sprintf(buffer,"Velocity Right: %f ---- Velocity LEFT: %f", CurVel_R, CurVel_L);
     uprintf(buffer);
     HAL_Delay(500);
 
