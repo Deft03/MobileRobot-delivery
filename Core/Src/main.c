@@ -153,8 +153,8 @@ unsigned char State0;
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   /* USER CODE BEGIN EXTI4_IRQn 1 */
 }
-void EXTI4_IRQHandler(void){	// doc encoder	
-  /* USER CODE BEGIN EXTI4_IRQn 0 */
+void EXTI4_IRQHandler(void){	// doc encoder	  
+  /* USER CODE BEGIN EXTI4_IRQn 0 */   
 unsigned char State1;
 	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
 	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6);
