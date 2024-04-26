@@ -60,7 +60,7 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 //
-/*========== ENCODER INTERRUPT EXTI 4 AND 6 VARIABLES =====================*/
+/*========== ENCODER INTERRUPT EXTI 4 =====================*/
 uint8_t PreviousState;            // Save State Interrupt
 int16_t CountValue;               // Counter Pulses from Encoder
 uint16_t CntVel;                  // VEL Counter
