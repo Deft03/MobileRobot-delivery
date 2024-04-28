@@ -158,27 +158,17 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>State0</ItemText>
+          <ItemText>PWM</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>PosCnt</ItemText>
+          <ItemText>CurrentSpeed</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Curvel</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>tx_data</ItemText>
-        </Ww>
-        <Ww>
-          <count>5</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>tx_data1,0x0A</ItemText>
+          <ItemText>RealSpeed</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
