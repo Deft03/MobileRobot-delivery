@@ -43,7 +43,7 @@
 #define error -0.0088              //error when rotate (motor) [NEEDED EDITING]
 #define Kp 26.5258238789594       //[PID Parameter](100/3.76991118);//kp=in/out=100/36
 #define Ki 0.005                  //PID Parameter
-#define PULSES 10752              //Read ENCODER X4
+#define PULSES 921              //Read ENCODER X4
 #define SAMPLETIME  0.005         //Interrupt TIMER 4 5ms
 /* USER CODE END PD */
 
@@ -67,7 +67,6 @@ uint16_t CntVel;                  // VEL Counter
 float PulseToRad = PULSES / (2*Pi);
 
 /*========== INTERRUPT TIMER 4 CALCULATE VEL VARIABLES ============*/
-uint8_t PWM;
 float CurrentSpeed;               // Current Speed (rad/s)
 float DesiredSpeed;               // Desired Speed (rad/s)
 float RealSpeed;                  // Current Speed (RPM)
@@ -76,7 +75,7 @@ int16_t Cnttmp;
 /*=========== PID VARIABLES ===============================================*/
 uint8_t HILIM;                    // Limit PWM HIGH
 uint8_t LOLIM;                    // Limit PWM LOW     
-uint8_t PWM;                      // Pulse PWM 0 -> 100 PWM
+int PWM;                      // Pulse PWM 0 -> 100 PWM
 float uout;                       // [PID] Value return
 float err;                        // [PID] error
 
@@ -108,6 +107,8 @@ static void MX_USART1_UART_Init(void);
  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 100);
  return ch;
 }
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -153,8 +154,8 @@ unsigned char State0;
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   /* USER CODE BEGIN EXTI4_IRQn 1 */
 }
-void EXTI4_IRQHandler(void){	// doc encoder	
-  /* USER CODE BEGIN EXTI4_IRQn 0 */
+void EXTI4_IRQHandler(void){	// doc encoder	  
+  /* USER CODE BEGIN EXTI4_IRQn 0 */   
 unsigned char State1;
 	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
 	State1 = (State1<<1) | HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6);
@@ -200,9 +201,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {	// ngat timer
     RealSpeed = (Cnttmp*60000)/(5*12*4*19.2);		//RPM; 
 		CurrentSpeed = (RealSpeed*2*Pi)/60;  //rad/s
 		//PidFunction(DesiredSpeed,RealVel);
-	  PWM = PidFunction(15,CurrentSpeed);  //rad/s    // Run DC motor with velocity = 15 rad/s
-    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_1,PWM); 
-
+	  //PWM = PidFunction(15,CurrentSpeed);  //rad/s    // Run DC motor with velocity = 15 rad/s
+    __HAL_TIM_SetCompare(&htim2,TIM_CHANNEL_1,100 ); 
+		
 	}
 }
 
@@ -278,16 +279,17 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	float n =RealSpeed;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 		//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_SET);
-
-		sprintf(buffer,"Velocity: %f", CurVel);
-    uprintf(buffer);
-    HAL_Delay(500);
+	printf("---%.3f---", RealSpeed);
+	//	sprintf(buffer,"%f-",n);
+  //  uprintf(buffer);
+    HAL_Delay(40);
 
   }
   /* USER CODE END 3 */
@@ -308,7 +310,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -318,12 +322,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -372,6 +376,14 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -485,8 +497,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB4 PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_6;
+  /*Configure GPIO pins : PB0 PB1 PB4 PB6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
