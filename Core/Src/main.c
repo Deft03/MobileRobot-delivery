@@ -113,7 +113,7 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+// comment 
 void uprintf(char *str){
   HAL_UART_Transmit(&huart1,(uint8_t *)str,sizeof(str), 100);
 
