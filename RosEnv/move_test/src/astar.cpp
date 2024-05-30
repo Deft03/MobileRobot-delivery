@@ -340,6 +340,7 @@ public:
       }
       else{
         robot_msg = move_func(x, y, robot_quar, dest_x, dest_y);
+
         pub_.publish(robot_msg);
 
       }
@@ -414,6 +415,55 @@ private:
 //   return robot_msg;
 // }
 
+void get_postition(string &s, int &x, int &y){ // x: 10, y: 20
+  size_t commaPos = s.find(',');
+  size_t coloPos = s.find(':');
+  int m_x = std::stoi(input.substr(colonPos + 2, commaPos - colonPos - 2));
+  colonPos = input.find(':', commaPos);
+  int value2 = std::stoi(input.substr(colonPos + 2));
+
+  std::cout << "Value 1: " << value1 << std::endl;
+  std::cout << "Value 2: " << value2 << std::endl;
+}
+// output: msg1 for x, msg2 for y
+geometry_msgs::position Pub_msg_position(){
+  std_msgs::String msg;  
+  int cur_x=0;
+  int cur_y=0;
+  int sumx=0;
+  int sumy=0;
+  std::deque<point> tmp(path);
+  
+  msg.data = my_serial.read(my_serial.available()); // READING UART/ Format: "x: , y: "
+  get_postition(msg.data,&cur_x,&cur_y);
+
+  double dest_x = tmp.begin()->x+OFFSET;
+  double dest_y = tmp.begin()->y+OFFSET;
+  while(!tmp.empty()){
+    if()
+    for (int num : tmp) {
+        std::cout << num.x << " ";
+        std::cout << num.y << " ";
+        if(num.x )
+
+    }
+    for (size_t i = 0; i < tmp.size() -1; i++) {
+        int next = tmp[i + 1];
+        int curr = tmp[0];
+        while(abs(cur.x - next.x) >1){
+          cout<<"X is changing";
+          sumx+=(abs(cur.x - next.x));
+        }
+
+        while(abs(cur.y - next.y) >1){
+          cout<<"Y is changing";
+          sumy+=(abs(cur.y - next.y));
+        }
+        if()
+    }
+
+  }
+}
 
 geometry_msgs::Twist move_func(double x, double y,  double dest_x, double dest_y){
 
@@ -425,8 +475,14 @@ geometry_msgs::Twist move_func(double x, double y,  double dest_x, double dest_y
 
   t = 1;
 
-  double dist = sqrt(pow((dest_x-x),2)+pow((dest_y-y),2));
-
+  
+  std_msgs::String msg;  
+  msg.data = my_serial.read(my_serial.available()); // READING UART
+  msg.x;
+  msg.y;
+  double dist = sqrt(pow((dest_x-msg.x),2)+pow((dest_y-msg.y),2));
+  double dist_x = 0;
+  double dist_y = 0;
   if (dist < 0.1) {
     robot_msg.linear.x = 0;
     robot_msg.linear.y = 0;
@@ -434,7 +490,7 @@ geometry_msgs::Twist move_func(double x, double y,  double dest_x, double dest_y
     path.pop_front();
   }
   else{
-    if (std::abs(dest_x-x) > std::abs(dest_y-y)){
+    if (std::abs(dest_x-x) > 1 ){
       // Di chuyển theo trục x
       robot_msg.linear.x = 0.8;
       robot_msg.linear.y = 0;
