@@ -70,7 +70,9 @@ void Pub_msg_position(string &s, int cur_x, int cur_y,  deque<point> path){
     }
 
 //  }
-}void Pub_msg_position1(string &s, int cur_x, int cur_y, deque<point> path) {
+}
+
+void Pub_msg_position1(string &s, int cur_x, int cur_y, deque<point> path) {
     int sumx = 0;
     int sumy = 0;
 
