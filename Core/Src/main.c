@@ -103,7 +103,7 @@ float Anti_windup (float Temp , float Kb, uint16_t High, uint16_t Low);
 void rotateDC_L ( int8_t Direct );
 void rotateDC_R ( int8_t Direct );
 void get_position(char *s, int *cur_x, int *cur_y);
-float Trapezoidal_Velocity (float target_position, float* current_position, double *current_velocity, float A, float V, float T);
+float Trapezoidal_Velocity (float target_position, float A, float V, float T);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
@@ -208,52 +208,37 @@ void get_position(char *s, int *cur_x, int *cur_y) {
     *cur_y = atoi(colonPos + 2);
 }
 
-float Trapezoidal_Velocity (float target_position, float A, float V, float T)
+void Trapezoidal_Velocity ()
 {
-	float distance = target_position - current_position;
-	float sign = (distance > 0) ? 1.0 : -1.0;
-	distance = fabs(distance);
-	
-	t1 = V / A;
-	t2 = (distance / V ) - t1;
-	t_total = 2 * t1 + t2;
-	
-	for(int i = 0 ; i <= t_total/T ; i++)
-	{
-		float t = i*T;
-		if (t <= t1 )
+	  A = 4 * (Target_pos - current_position)/(t_total*t_total);
+	 t1 = (t_total /2) - 0.5 * sqrt((t_total*t_total) - (4 * abs(Target_pos - current_position)/A));
+	for (int i =0; i <= (t_total/T);i++)
+	{ 
+		t = i * T;
+		if (t <= t1 && t >=0 )
 		{
-			current_velocity += A * T * sign;
+			qt = current_position + 0.5 * A * t * t;
+			qt_dot = A * t;
 		}
-		else if (t > t1 && t <= t1 + t2)
+		else if ( t > t1 && t <= t_total - t1)
 		{
-			current_velocity = V * sign;
+			qt = current_position + A * t1 * (t - t1/2);
+			qt_dot = A * t1;
 		}
-		else
+		else if ( t > (t_total - t1) && t <= t_total)
 		{
-			current_velocity -= A * T * sign;
+			qt = Target_pos - 0.5 * A * (t - t_total) * (t - t_total);
+			qt_dot = A * (t_total - t );
+			
 		}
 		
-		if (t <= t1)
-		{
-			current_position += current_velocity * T + 0.5 * A * T * T * sign;
-		}
-		else if ( t > t1 && t1 > t1 + t2 )
-		{
-			current_position += current_velocity * T - 0.5 * A * T * T * sign;
-		}
-		else
-		{
-			current_position += current_velocity * T;
-		}
 	}
-	
-	return current_velocity;
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim -> Instance == TIM2)
 	{
+    
 		////////////////////////////////////////// Encoder A ////////////////////////////////////////////////////
 		EncoderA = __HAL_TIM_GetCounter(&htim3);
 		//Lay chenh lech encoder
@@ -278,9 +263,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		
 		CurvelB = ( 60 * deltaB ) / (PPR * Time_Interrupt *gear_ratio);
 		WL = Average_5_times(CurvelB,sum_B);
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    SP_WL = Trapezoidal_Velocity(Target_pos,A_max,V_max,T);
-		SP_WR = Trapezoidal_Velocity(Target_pos,A_max,V_max,T);
+		
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		TempPWM_L = PID_WL(SP_WL,WL);
     TempPWM_R = PID_WR(SP_WR,WR);
