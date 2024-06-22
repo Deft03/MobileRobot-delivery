@@ -332,15 +332,27 @@ def main(agent):
                 delta_x = next_x-now_x
                 delta_y = next_y-now_y
                 delta_pos = (delta_x,delta_y)
-                match delta_pos:
-                    case (1,0):
-                        curr_step = "R"
-                    case (-1,0):
-                        curr_step = "L"
-                    case (0,1):
-                        curr_step = "U"
-                    case (0,-1):
-                        curr_step = "D"
+
+                if delta_pos == (1, 0):
+                    curr_step = "R"
+                elif delta_pos == (-1, 0):
+                    curr_step = "L"
+                elif delta_pos == (0,1):
+                    curr_step = "U"
+                elif delta_pos == (0,-1):
+                    curr_step = "D"    
+                # thêm các điều kiện khác ở đây
+                else:
+                    curr_step = "Unknown"
+                # match delta_pos:
+                #     case (1,0):
+                #         curr_step = "R"
+                #     case (-1,0):
+                #         curr_step = "L"
+                #     case (0,1):
+                #         curr_step = "U"
+                #     case (0,-1):
+                #         curr_step = "D"
                 if(last_step == None):
                     last_step = curr_step
                 if(curr_step == last_step):
