@@ -2,6 +2,7 @@ import socket
 import time
 
 HOST = "192.168.19.109"
+# HOST = "10.89.234.39"
 PORT = 2113
 ADR = (HOST,PORT)
 
@@ -12,6 +13,7 @@ class Robot:
     def __init__(self,id,init_status,init_x,init_y):
         self.id = id
         self.current_x = init_x
+        
         self.current_y = init_y
         self.status = init_status #Free: 0 || MovingTo: 1 || Lifting 2
         self.cur_velocity_x = 0
@@ -68,6 +70,22 @@ class Robot:
                     #m2v_X(1,-1)
                 case "P":
                     self.status = 2
+            # if dir == "U" :
+            #     self.current_y += 1
+            #     self.status = 1
+            # elif dir == "D" :
+            #     self.current_y += 1
+            #     self.status = 1
+            # elif dir == "L" :
+            #     self.current_x -= 1
+            #     self.status = 1
+            # elif dir == "R" :
+            #     self.current_x += 1
+            #     self.status = 1
+            # elif dir == "P" :
+            #     self.status = 2
+
+
             num -= 1
             self.sendMessage()
             time.sleep(0.5)

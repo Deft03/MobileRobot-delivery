@@ -1,7 +1,12 @@
 import socket
 import time
 
+<<<<<<< HEAD
 HOST = "192.168.19.109"
+=======
+HOST = "
+"
+>>>>>>> 78e2abab923ab6e129aa960b8f32d3836e7d89fb
 PORT = 2113
 ADR = (HOST,PORT)
 
@@ -36,21 +41,21 @@ class Robot:
         num,dir = step
         print(num,dir)
         while num:
-            match dir:
-                case "U":
-                    self.current_y += 1
-                    self.status = 1
-                case "D":
-                    self.current_y -= 1
-                    self.status = 1
-                case "L":
-                    self.current_x -= 1
-                    self.status = 1
-                case "R":
-                    self.current_x += 1
-                    self.status = 1
-                case "P":
-                    self.status = 2
+            if dir == "U" :
+                self.current_y += 1
+                self.status = 1
+            elif dir == "D" :
+                self.current_y += 1
+                self.status = 1
+            elif dir == "L" :
+                self.current_x -= 1
+                self.status = 1
+            elif dir == "R" :
+                self.current_x += 1
+                self.status = 1
+            elif dir == "P" :
+                self.status = 2
+                
             num -= 1
             self.sendMessage()
             time.sleep(0.5)

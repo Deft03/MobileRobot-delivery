@@ -117,7 +117,7 @@ def assignJob():
     job_dict = {}
     if(len(goal_list)):
         for agent in agent_list:
-            if(agent.status==0):
+            if(agent.status==0): ## TODO: define or enum status
                 free_agent_list.append(agent)
 
         print(free_agent_list)                
@@ -127,14 +127,14 @@ def assignJob():
             min_agent = None
             for agent in free_agent_list:
                 temp = calculateDistance(goal,(agent.curr_x,agent.curr_y))
-                if(temp <= min_dist):
+                if(temp <= min_dist): 
                     min_dist = temp
                     min_agent = agent
             if(min_agent!=None):
                 job_dict[goal] = min_agent
                 free_agent_list.remove(min_agent)
                 # goal_list.remove(goal)
-                # print(goal_list)
+                print(goal_list)
             else:
                 print(f"No availble agent for {goal} goal")
         for goal in job_dict.keys():
@@ -212,14 +212,14 @@ def handleClient(conn,adr):
             if(len(path_dict)):
                 print(robot_id)
                 try:
-                    # print(path_dict[robot_id])
+                    print(path_dict[robot_id])
                     path = path_dict[robot_id]
                     path_dict.pop(robot_id)
                     path_str = ""
                     for item in path:
                         path_str += str(item[0])+item[1]
                         path_str += ','
-                    path_str = path_str[:-1]
+                    path_str = path_str[:1]
                     print(path_str)
                     conn.send(path_str.encode('utf-8'))
                     listening = True
