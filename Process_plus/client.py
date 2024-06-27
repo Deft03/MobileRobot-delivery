@@ -1,7 +1,7 @@
 import socket
 import time
 
-HOST = "127.0.0.1"
+HOST = "192.168.19.109"
 PORT = 2113
 ADR = (HOST,PORT)
 
@@ -14,7 +14,10 @@ class Robot:
         self.current_x = init_x
         self.current_y = init_y
         self.status = init_status #Free: 0 || MovingTo: 1 || Lifting 2
+        self.cur_velocity_x = 0
+        self.cur_velocity_y = 0
         self.path = []
+        
     def sendMessage(self):
         msg = str(self.id)+"|"+str(self.status)+"|"+str(self.current_x)+"|"+str(self.current_y)
         print(msg)
@@ -31,24 +34,38 @@ class Robot:
             path.append((num,dir))
         if(len(path)):
             self.path = path
-
+    #def trans_uart_x(self ):
+        
+    def velocity_function(self, cur_pos, tar_pos):
+        distance = tar_pos - cur_pos
+        if distance > 0:
+            sign =1
+        else:
+            sign =-1
+    # def handle_vel():
+        
+        ## lay gia tri tuyet doi cho distance
     def move(self,step):
         num,dir = step
-        print(num,dir)
+        print(num,dir) ## 2D
         while num:
             match dir:
                 case "U":
                     self.current_y += 1
                     self.status = 1
+                    #m2v_Y(1,1) ##TODO:          
                 case "D":
                     self.current_y -= 1
                     self.status = 1
+                    #m2v_Y(1,1) ##TODO:     
                 case "L":
                     self.current_x -= 1
                     self.status = 1
+                    #m2v_X(1,-1)
                 case "R":
                     self.current_x += 1
                     self.status = 1
+                    #m2v_X(1,-1)
                 case "P":
                     self.status = 2
             num -= 1

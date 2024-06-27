@@ -3,7 +3,7 @@ import threading
 import math
 import path4server
 
-HOST = "192.168.1.3"
+HOST = "192.168.19.109"
 PORT = 2113
 ADR = (HOST,PORT)
 
@@ -15,7 +15,7 @@ class Agent:
         self.id = id
         self.curr_x = x
         self.curr_y = y
-        self.status = status
+        self.status = status  # format status
     def updatePositionStatus(self,x,y,status):
         self.curr_x = x
         self.curr_y = y
@@ -23,8 +23,11 @@ class Agent:
     def showInfo(self):
         print(f"ID: {self.id}|| Status: {self.status}|| X: {self.curr_x}|| Y: {self.curr_y}")
 
-agent_list = []
-goal_list = [(2,1),(3,4),(3,2),(6,7)]
+agent_list = [] ## list all agent
+goal_list = [(2,1),(3,4),(3,2),(6,7)] ## for all agent . isn't it? 
+home_list = [(2,1),(3,4)] ## for all agent . isn't it? 
+station_list = [(1,6)] ## for all agent . isn't it? 
+
 # goal_list = []
 job_dict = {}
 to_make_path = []
@@ -36,6 +39,78 @@ def calculateDistance(goal_pos,agent_pos):
     distance = math.sqrt((gx-ax)**2+(gy-ay)**2)
     return distance
 
+def assign_process():
+    free_agent_list = []
+    home_agent_list = []
+    goal_agent_list = []
+    global job_dict
+    job_dict = {}
+    if(len(goal_list) | len(home_list) ):
+        for agent in agent_list:
+            if(agent.status==0):
+                free_agent_list.append(agent) # home -> station
+            if(agent.status==2):
+                goal_agent_list.append(agent) # station -> goal
+            if(agent.status==3):
+                home_agent_list.append(agent) # goal -> home
+
+        print(free_agent_list)                
+    if(len(free_agent_list)): 
+        for goal in station_list:
+            min_dist = 99999
+            min_agent = None
+            for agent in free_agent_list:
+                temp = calculateDistance(goal,(agent.curr_x,agent.curr_y))
+                if(temp <= min_dist):
+                    min_dist = temp
+                    min_agent = agent
+            if(min_agent!=None):
+                job_dict[goal] = min_agent
+                free_agent_list.remove(min_agent)
+                # goal_list.remove(goal)
+                # print(goal_list)
+            else:
+                print(f"No availble agent for {goal} goal")
+        for goal in job_dict.keys():
+            station_list.remove(goal)
+    if(len(goal_agent_list)): 
+        for goal in goal_list:
+            min_dist = 99999
+            min_agent = None
+            for agent in goal_agent_list:
+                temp = calculateDistance(goal,(agent.curr_x,agent.curr_y))
+                if(temp <= min_dist):
+                    min_dist = temp
+                    min_agent = agent
+            if(min_agent!=None):
+                job_dict[goal] = min_agent
+                goal_agent_list.remove(min_agent)
+                # goal_list.remove(goal)
+                # print(goal_list)
+            else:
+                print(f"No availble agent for {goal} goal")
+        for goal in job_dict.keys():
+            goal_list.remove(goal)
+    if(len(home_agent_list)):  
+        for goal in home_list:
+            min_dist = 99999
+            min_agent = None
+            for agent in home_agent_list:
+                temp = calculateDistance(goal,(agent.curr_x,agent.curr_y))
+                if(temp <= min_dist):
+                    min_dist = temp
+                    min_agent = agent
+            if(min_agent!=None):
+                job_dict[goal] = min_agent
+                home_agent_list.remove(min_agent)
+                # goal_list.remove(goal)
+                # print(goal_list)
+            else:
+                print(f"No availble agent for {goal} goal")
+        for goal in job_dict.keys():
+            home_list.remove(goal)
+
+
 def assignJob():
     free_agent_list = []
     global job_dict
@@ -44,8 +119,9 @@ def assignJob():
         for agent in agent_list:
             if(agent.status==0):
                 free_agent_list.append(agent)
+
         print(free_agent_list)                
-    # if(len(free_agent_list)):    
+    # if(len(free_agent_list)):     
         for goal in goal_list:
             min_dist = 99999
             min_agent = None
@@ -79,8 +155,8 @@ def manageOrder():
         #         y = int(y)
         #         temp_goal = (x,y)
         #         goal_list.append(temp_goal)
-        if(len(goal_list)>0):
-            assignJob()
+        if(len(goal_list)>0 | len(home_list)>0 | len(station_list)>0 ):
+            assign_process()
         if(len(job_dict)>0):
             for goal,agent in job_dict.items():
                 job = {}
@@ -92,6 +168,7 @@ def manageOrder():
                     to_make_path.append(job)
             print(to_make_path)
             global path_dict 
+
             path_dict = path4server.main(to_make_path)
             print(path_dict)         
 
@@ -111,7 +188,7 @@ def handleClient(conn,adr):
                 if msg == DISCONNECT_MESSAGE:
                     connected = False
                 else:
-                    id,status,x,y = msg.split('|')
+                    id,status,x,y = msg.split('|') ## wow
                     x = int(x)
                     y = int(y)
                     status = int(status)
@@ -120,7 +197,7 @@ def handleClient(conn,adr):
                     for agent in agent_list:
                         if(id==agent.id):
                             agent.updatePositionStatus(x,y,status)
-                            # agent.showInfo()
+                            agent.showInfo()
                             break
                     else:
                         agent_list.append(new_agent)

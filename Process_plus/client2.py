@@ -1,7 +1,7 @@
 import socket
 import time
 
-HOST = "127.0.0.1"
+HOST = "192.168.19.109"
 PORT = 2113
 ADR = (HOST,PORT)
 
