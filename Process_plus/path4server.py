@@ -341,9 +341,7 @@ def main(agent):
                     curr_step = "U"
                 elif delta_pos == (0,-1):
                     curr_step = "D"    
-                # thêm các điều kiện khác ở đây
-                else:
-                    curr_step = "Unknown"
+
                 # match delta_pos:
                 #     case (1,0):
                 #         curr_step = "R"

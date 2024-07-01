@@ -1,38 +1,35 @@
 import socket
 import time
+
 import threading
-import serial
-import time
+# import serial
 import struct
 import math
 from time import sleep
-HOST = "192.168.19.109"
-# HOST = "10.89.234.39"
+
+HOST = "192.168.1.166"
 PORT = 2113
 ADR = (HOST,PORT)
 
 HEADER = 64
 DISCONNECT_MESSAGE = "!DISCONNECT"
-t_total = 1
-T = 0.01
+
+t_total = 2
+T = 0.1
 velX = 0
 VelY = 0
-qt_dot_x = 0
-qt_dot_y = 0
 
-z_status = 0
-z_status_cur = 0
 class Robot:
     def __init__(self,id,init_status,init_x,init_y):
         self.id = id
         self.current_x = init_x
-        
         self.current_y = init_y
         self.status = init_status #Free: 0 || MovingTo: 1 || Lifting 2
-        self.cur_velocity_x = 0
-        self.cur_velocity_y = 0
         self.path = []
-        
+        self.qt_dot_x = 0
+        self.qt_dot_y = 0
+        self.z_status = 0
+        self.z_status_cur = 0
     def sendMessage(self):
         msg = str(self.id)+"|"+str(self.status)+"|"+str(self.current_x)+"|"+str(self.current_y)
         print(msg)
@@ -49,9 +46,8 @@ class Robot:
             path.append((num,dir))
         if(len(path)):
             self.path = path
-    #def trans_uart_x(self ):
         
-    def Trapezoidal_Velocity_X(Target_pos, current_position):
+    def Trapezoidal_Velocity_X(self, Target_pos, current_position):
         global qt_dot_x
         global t_total
         global T
@@ -70,10 +66,15 @@ class Robot:
             elif t > (t_total - t1) and t <= t_total:
                 qt = Target_pos - 0.5 * A * (t - t_total) * (t - t_total)
                 qt_dot_x = A * (t_total - t)
+            #ser.write(qt_dot_y.encode('utf-8'))
+            self.qt_dot_x = qt_dot_x
 
+            self.send_uart_signal()
+            self.handle_z() 
+            sleep(0.3)
             print(f"Time: {t:.2f}, Position: {qt:.2f}, Velocity: {qt_dot_x:.2f}")
-
-    def Trapezoidal_Velocity_Y(Target_pos, current_position):
+            #ser.write(qt_dot_x.encode('utf-8'))
+    def Trapezoidal_Velocity_Y(self, Target_pos, current_position):
         global qt_dot_y
         global t_total
         global T
@@ -92,58 +93,52 @@ class Robot:
             elif t > (t_total - t1) and t <= t_total:
                 qt = Target_pos - 0.5 * A * (t - t_total) * (t - t_total)
                 qt_dot_y = A * (t_total - t)
-
+            #ser.write(qt_dot_y.encode('utf-8'))
+            self.qt_dot_y = qt_dot_y
+            
+            self.send_uart_signal()
+            self.handle_z()    
+            sleep(0.3)
             print(f"Time: {t:.2f}, Position: {qt:.2f}, Velocity: {qt_dot_y:.2f}")
-
-        
-        ## lay gia tri tuyet doi cho distance
+            # transmit uart
+            #ser.write(qt_dot_y.encode('utf-8'))
     def move(self,step):
-        global z_status
         num,dir = step
-        print(num,dir) ## 2D111
+        print(num,dir)
         while num:
             match dir:
                 case "U":
-                    z_status = 1
+                    self.z_status = 1
+                    tempU = self.current_y+1
                     target = self.current_y
                     self.status = 1
-                    self.Trapezoidal_Velocity_Y(self.current_y , self.current_y+1)
+                    self.Trapezoidal_Velocity_Y(self.current_y , tempU)
                     self.current_y += 1
                     #m2v_Y(1,1) ##TODO:          
                 case "D":
-                    z_status = 1
+                    self.z_status = 1
                     self.status = 1
-                    self.Trapezoidal_Velocity_Y(self.current_y , self.current_y - 1)
+                    tempD =  self.current_y - 1
+                    self.Trapezoidal_Velocity_Y(self.current_y , tempD)
                     self.current_y -= 1
                     #m2v_Y(1,1) ##TODO:     
                 case "L":
+                    self.z_status = 0
+                    tmpL =  self.current_x - 1
                     self.status = 1
-                    self.Trapezoidal_Velocity_X(self.current_x , self.current_x - 1)
+                    self.Trapezoidal_Velocity_X(self.current_x ,tmpL)
                     self.current_x -= 1
                     #m2v_X(1,-1)
                 case "R":
+                    self.z_status = 0
+                    tmpR =  self.current_x + 1
                     self.current_x += 1
                     self.status = 1
-                    self.Trapezoidal_Velocity_X(self.current_x , self.current_x + 1)
+                    self.Trapezoidal_Velocity_X(self.current_x , tmpR)
                     #m2v_X(1,-1)
                 case "P":
                     self.status = 2
-            # if dir == "U" :
-            #     self.current_y += 1
-            #     self.status = 1
-            # elif dir == "D" :
-            #     self.current_y += 1
-            #     self.status = 1
-            # elif dir == "L" :
-            #     self.current_x -= 1
-            #     self.status = 1
-            # elif dir == "R" :
-            #     self.current_x += 1
-            #     self.status = 1
-            # elif dir == "P" :
-            #     self.status = 2
-
-
+                
             num -= 1
             self.sendMessage()
             time.sleep(0.5)
@@ -158,7 +153,22 @@ class Robot:
             self.path.pop(0)
             print(self.path)
             # time.sleep(1)
-
+    def handle_z(self):
+        if(self.z_status != self.z_status_cur):
+            # ser2.write(z_status.encode('utf-8'))
+            print(" transfer value Z: " ,self.z_status )
+            sleep(3)
+            self.z_status_cur =  self.z_status
+    def send_uart_signal(self):
+        if(self.z_status != self.z_status_cur):
+            # ser2.write(z_status.encode('utf-8'))
+            print("value Z: " ,self.z_status )
+            sleep(5)
+        # ser.write(qt_dot_x.encode('utf-8'))
+        print("trans vel uart value X: " ,self.qt_dot_x )
+        # ser1.write(qt_dot_y.encode('utf-8'))
+        print("trans vel uart value Y: " ,self.qt_dot_y )
+        self.z_status_cur = self.z_status
 
 def send(msg):
     message = msg.encode('utf-8')
@@ -189,29 +199,33 @@ def handlServer():
     # temp = input("Press q to quit: ")
     # if(temp == "q"):
 
-ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.1)
-ser1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.1)
-ser2 = serial.Serial('/dev/ttyUSB2', 115200, timeout=0.1)
+# ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.1)
+# ser1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.1)
+# ser2 = serial.Serial('/dev/ttyUSB2', 115200, timeout=0.1)
 
-def handleUart():
-    while True:
-            # print("Nhap input")
-            # trans = input()
-            send_uart_signal()
-            #send_number(10)
-            print("sended")
-            #time.sleep(delay)
+# def handleUart1():
+#     while True:
+#             # print("Nhap input")
+#             # trans = input()
+#             send_uart_signal()
+#             #send_number(10)
+#             print("sended")
+#             #time.sleep(delay)
 # Hàm gửi tín hiệu UART
-def send_uart_signal(signal):
-    global qt_dot_x
-    global qt_dot_y
-    global z_status
-    if(z_status != z_status_cur):
-        ser2.write(z_status.encode('utf-8'))
-        sleep(5)
-    ser.write(qt_dot_x.encode('utf-8'))
-    ser1.write(qt_dot_y.encode('utf-8'))
-    z_status_cur = z_status
+# def send_uart_signal():
+#     global qt_dot_x
+#     global qt_dot_y
+#     global z_status
+#     if(self.z_status != self.z_status_cur):
+#         # ser2.write(z_status.encode('utf-8'))
+#         print("value Z: " ,self.z_status )
+#         sleep(5)
+#     # ser.write(qt_dot_x.encode('utf-8'))
+#     print("trans vel uart value X: " ,qt_dot_x )
+#     # ser1.write(qt_dot_y.encode('utf-8'))
+#     print("trans vel uart value Y: " ,qt_dot_y )
+#     z_status_cur = self.z_status
+
 
 
 # Đoạn code để đọc giá trị từ các nút GPIO và gửi tín hiệu UART tương ứng
@@ -221,9 +235,9 @@ def start():
     print(f"[LISTENING] Server is listening on {socket.gethostbyname(socket.gethostname())}")
     order_thread = threading.Thread(target=handlServer)
     order_thread.start()
-    uart_thread = threading.Thread(target=handleUart)
-    uart_thread.start()
+    # uart_thread = threading.Thread(target=handleUart)
+    # uart_thread.start()
 
 
 start()
-send(DISCONNECT_MESSAGE)
+# send(DISCONNECT_MESSAGE)

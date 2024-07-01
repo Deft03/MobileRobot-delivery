@@ -3,7 +3,7 @@ import threading
 import math
 import path4server
 
-HOST = "192.168.19.109"
+HOST = "192.168.1.166"
 PORT = 2113
 ADR = (HOST,PORT)
 
@@ -24,9 +24,10 @@ class Agent:
         print(f"ID: {self.id}|| Status: {self.status}|| X: {self.curr_x}|| Y: {self.curr_y}")
 
 agent_list = [] ## list all agent
-goal_list = [(2,1),(3,4),(3,2),(6,7)] ## for all agent . isn't it? 
-home_list = [(2,1),(3,4)] ## for all agent . isn't it? 
-station_list = [(1,6)] ## for all agent . isn't it? 
+#goal_list = [(2,1),(3,4),(3,2),(6,7)] ## for all agent . isn't it? 
+goal_list = [(2,1),(3,4),(3,2),(6,7)]
+home_list = [(2,8),(3,5)] ## for all agent . isn't it? 
+station_list = [(2,1),(3,4),(3,2),(6,7)] ## for all agent . isn't it? 
 
 # goal_list = []
 job_dict = {}
@@ -155,7 +156,9 @@ def manageOrder():
         #         y = int(y)
         #         temp_goal = (x,y)
         #         goal_list.append(temp_goal)
-        if(len(goal_list)>0 | len(home_list)>0 | len(station_list)>0 ):
+         # if(len(goal_list)>0 | len(home_list)>0 | len(station_list)>0 ):
+
+        if(len(goal_list)>0):
             assign_process()
         if(len(job_dict)>0):
             for goal,agent in job_dict.items():
@@ -219,7 +222,7 @@ def handleClient(conn,adr):
                     for item in path:
                         path_str += str(item[0])+item[1]
                         path_str += ','
-                    path_str = path_str[:1]
+                    path_str = path_str[:-1]
                     print(path_str)
                     conn.send(path_str.encode('utf-8'))
                     listening = True
